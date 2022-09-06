@@ -1,29 +1,31 @@
-import java.rmi.server.*;
-import java.net.*;
-import java.rmi.*;
+import java.rmi.registry.Registry;
+import java.rmi.Naming;
+import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.server.UnicastRemoteObject;
 
-public class ImpServeurHello extends UnicastRemoteObject implements Hello{
-    public ImpServeurHello () throws RemoteException{super ();}
+public class ImpServeurHello implements Compteur {
 
-    public String ditBonjour () throws RemoteException{return "bonjour a tous";}
+    public ImpServeurHello() {
+    }
 
+    @Override
+    public int Somme(int a, int b) throws RemoteException {
+        return a + b;
+    }
 
-    public static void main(String arg []){
-        try{
-        ImpServeurHello s=new ImpServeurHello ();
-        String nom="nomdelobjet";
-        Naming.rebind(nom ,s); // enregistrement
-        System.out.println("Serveur enregistré");
+    public static void main(String args[]) {
 
-        Naming.rebind("addition", s);
+        try {
+            ImpServeurHello obj = new ImpServeurHello();
+            Compteur nom = (Compteur) UnicastRemoteObject.exportObject(obj, 0);
 
-        LocateRegistry.createRegistry(6600);
-        // Register communication route
-        Naming.rebind("rmi://0.0.0.0:6600/PersonService", personService);
-        
-        LocateRegistry.getRegistry("172.31.18.40", 6600);
-        
+            Naming.rebind("Somme", nom);
+
+            System.err.println("Server ready");
+        } catch (Exception e) {
+            System.err.println("Server exception: " + e.toString());
+            e.printStackTrace();
         }
-        catch (Exception e){System.err.println("Erreur :"+e);}
     }
 }
