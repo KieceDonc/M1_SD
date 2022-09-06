@@ -1,15 +1,16 @@
 import java.rmi.*;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
 
 public class ClientHello {
     public static void main(String arg[]) {
         try {
             int a = 5;
             int b = 7;
-            /*
-             * Hello h=( Hello) Naming.lookup("nomdelobjet");
-             * String messageRecu=h.ditBonjour ();
-             * System.out.println(messageRecu);
-             */
+
+            Registry registry = LocateRegistry.getRegistry("0.0.0.0");
+            Compteur stub = (Compteur) registry.lookup("Somme");
+            int result = stub.addition(a, b);
 
             Compteur c = (Compteur) Naming.lookup("Somme");
             int result = c.Somme(a, b);

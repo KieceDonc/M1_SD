@@ -1,5 +1,4 @@
 import java.rmi.registry.Registry;
-import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
@@ -18,9 +17,10 @@ public class ImpServeurHello implements Compteur {
 
         try {
             ImpServeurHello obj = new ImpServeurHello();
-            Compteur nom = (Compteur) UnicastRemoteObject.exportObject(obj, 0);
+            Registry registry = LocateRegistry.getRegistry();
+            Compteur stub = (Compteur) UnicastRemoteObject.exportObject(obj, 0);
 
-            Naming.rebind("Somme", nom);
+            registry.rebind("Somme", stub);
 
             System.err.println("Server ready");
         } catch (Exception e) {
