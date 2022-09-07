@@ -4,6 +4,8 @@ import java.rmi.registry.LocateRegistry;
 import java.rmi.server.UnicastRemoteObject;
 
 public class ImpServeurHello implements Compteur {
+    // rmiregistry &
+    // java ImpServeurHello
 
     public ImpServeurHello() {
     }
