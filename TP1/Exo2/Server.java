@@ -29,6 +29,7 @@ public class Server {
     }
 
     public static class AccountFactoryImp extends UnicastRemoteObject implements AccountFactory {
+        // https://docs.oracle.com/javase/8/docs/technotes/guides/rmi/Factory.html
 
         protected AccountFactoryImp() throws RemoteException {
             super();

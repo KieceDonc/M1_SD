@@ -5,7 +5,7 @@ public class Client {
     public static void main(String arg[]) {
         try {
 
-            Registry registry = LocateRegistry.getRegistry("127.0.0.1");
+            Registry registry = LocateRegistry.getRegistry("192.168.1.77");
 
             AccountFactory stub = (AccountFactory) registry.lookup("AccountFactory");
             Account account = stub.createAccount();
