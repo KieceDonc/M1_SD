@@ -1,76 +1,56 @@
-package TP1.Exo2;
-
-import java.util.HashMap;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 
-public class Server implements AccountMethods {
+public class Server {
 
-    // All wrong because you don't use RMI Registry
+    public static class AccountImp extends UnicastRemoteObject implements Account {
+        private float balance;
 
-    public class ObjectFactory {
-        private int lastID = 0;
-
-        private HashMap<Integer, Account> accounts = new HashMap<Integer, Account>();
-
-        public Account getAccount(int id) {
-            if (accounts.containsKey(id)) {
-                return accounts.get(id);
-            } else {
-                Account account = new Account();
-                accounts.put(getUniqueID(), account);
-                return account;
-            }
+        protected AccountImp() throws RemoteException {
+            super();
         }
 
-        private synchronized int getUniqueID() {
-            return lastID++;
-        }
-    }
-
-    public class Account {
-        private int balance;
-
-        public int getBalance() {
+        @Override
+        public float getBalance() throws RemoteException {
             return balance;
         }
 
-        public void deposit(int amount) {
+        @Override
+        public void deposit(float amount) throws RemoteException {
             balance += amount;
-
         }
 
-        public void withdraw(int amount) {
+        @Override
+        public void withdraw(float amount) throws RemoteException {
             balance -= amount;
         }
     }
 
-    ObjectFactory objectFactory = new ObjectFactory();
+    public static class AccountFactoryImp extends UnicastRemoteObject implements AccountFactory {
 
-    public static void main(int[] args) {
+        protected AccountFactoryImp() throws RemoteException {
+            super();
+        }
+
+        @Override
+        public Account createAccount() throws RemoteException {
+            return new AccountImp();
+        }
+    }
+
+    public static void main(String[] args) {
         try {
-            Server server = new Server();
+            AccountFactoryImp stub = new AccountFactoryImp();
+            Registry registry = LocateRegistry.getRegistry();
+            registry.bind("AccountFactory", stub);
 
-            System.err.println("Server ready");
         } catch (Exception e) {
             System.err.println("Server exception: " + e.toString());
             e.printStackTrace();
         }
 
-    }
-
-    @Override
-    public int getBalance(int id) throws RemoteException {
-        return objectFactory.getAccount(id).getBalance();
-    }
-
-    @Override
-    public void deposit(int id, int amount) throws RemoteException {
-        objectFactory.getAccount(id).deposit(amount);
-    }
-
-    @Override
-    public void withdraw(int id, int amount) throws RemoteException {
-        objectFactory.getAccount(id).withdraw(amount);
     }
 
 }
