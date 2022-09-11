@@ -2,42 +2,69 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
 
 public class Server {
 
     public static class AccountImp extends UnicastRemoteObject implements Account {
-        private float balance;
+        private double balance;
+        private int ID;
 
-        protected AccountImp() throws RemoteException {
+        protected AccountImp(int ID) throws RemoteException {
             super();
+            this.ID = ID;
         }
 
         @Override
-        public float getBalance() throws RemoteException {
+        public double getBalance() throws RemoteException {
             return balance;
         }
 
         @Override
-        public void deposit(float amount) throws RemoteException {
+        public void deposit(double amount) throws RemoteException {
             balance += amount;
         }
 
         @Override
-        public void withdraw(float amount) throws RemoteException {
+        public void withdraw(double amount) throws RemoteException {
             balance -= amount;
+        }
+
+        @Override
+        public int getID() throws RemoteException {
+            return ID;
         }
     }
 
     public static class AccountFactoryImp extends UnicastRemoteObject implements AccountFactory {
         // https://docs.oracle.com/javase/8/docs/technotes/guides/rmi/Factory.html
 
+        private HashMap<Integer, AccountImp> Accounts;
+        private int lastUniqueID;
+
         protected AccountFactoryImp() throws RemoteException {
             super();
+            Accounts = new HashMap<>();
         }
 
         @Override
         public Account createAccount() throws RemoteException {
-            return new AccountImp();
+            AccountImp account = new AccountImp(getUniqueID());
+            Accounts.put(account.getID(), account);
+            return (Account) account;
+        }
+
+        @Override
+        public Account getAccount(int ID) throws RemoteException {
+            if (Accounts.containsKey(ID)) {
+                return Accounts.get(ID);
+            } else {
+                return null;
+            }
+        }
+
+        private synchronized int getUniqueID() {
+            return lastUniqueID++;
         }
     }
 
