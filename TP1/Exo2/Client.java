@@ -1,19 +1,17 @@
-import java.math.RoundingMode;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
-import java.text.DecimalFormat;
 import java.util.Random;
 
 public class Client extends Thread {
     public static void main(String arg[]) {
         try {
 
-            Registry registry = LocateRegistry.getRegistry("192.168.1.77");
+            Registry registry = LocateRegistry.getRegistry("127.0.0.1");
 
             AccountFactory stub = (AccountFactory) registry.lookup("AccountFactory");
 
-            for (int x = 0; x < 10000; x++) {
+            for (int x = 0; x < 1000; x++) {
                 Account account = stub.createAccount();
 
                 System.out.println("-------------------------------------------------------------");
@@ -23,9 +21,7 @@ public class Client extends Thread {
                 account.withdraw(getRandomValue(50, 90));
                 printAccountBalance(account);
                 System.out.println(
-                        "Sleeping for 5ms ZzZzzzz\n-------------------------------------------------------------");
-
-                Thread.sleep(5);
+                        "-------------------------------------------------------------");
             }
         } catch (Exception e) {
             System.err.println("Erreur :" + e);

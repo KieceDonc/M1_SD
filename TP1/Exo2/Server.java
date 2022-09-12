@@ -59,7 +59,7 @@ public class Server {
             if (Accounts.containsKey(ID)) {
                 return Accounts.get(ID);
             } else {
-                return null;
+                return createAccount();
             }
         }
 
