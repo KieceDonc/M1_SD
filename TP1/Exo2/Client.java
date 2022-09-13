@@ -12,7 +12,7 @@ public class Client extends Thread {
             AccountFactory stub = (AccountFactory) registry.lookup("AccountFactory");
 
             for (int x = 0; x < 1000; x++) {
-                Account account = stub.createAccount();
+                Account account = stub.getAccount();
 
                 System.out.println("-------------------------------------------------------------");
                 printAccountBalance(account);

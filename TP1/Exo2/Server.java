@@ -48,18 +48,13 @@ public class Server {
         }
 
         @Override
-        public Account createAccount() throws RemoteException {
-            AccountImp account = new AccountImp(getUniqueID());
-            Accounts.put(account.getID(), account);
-            return (Account) account;
-        }
-
-        @Override
         public Account getAccount(int ID) throws RemoteException {
             if (Accounts.containsKey(ID)) {
                 return Accounts.get(ID);
             } else {
-                return createAccount();
+                AccountImp account = new AccountImp(getUniqueID());
+                Accounts.put(account.getID(), account);
+                return (Account) account;
             }
         }
 
