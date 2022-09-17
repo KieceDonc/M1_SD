@@ -1,12 +1,13 @@
 ﻿import java.io.Serializable;
+import java.rmi.RemoteException;
 
 public class TaskImp implements Task, Serializable {
     BagOfResult bagOfResult;
 
     int primeNumber;
-    boolean isPrimeNumber = true; 
+    boolean isPrimeNumber = true;
 
-    public Task(BagOfResult bagOfResult, int primeNumber){
+    public TaskImp(BagOfResult bagOfResult, int primeNumber) {
         this.bagOfResult = bagOfResult;
         this.primeNumber = primeNumber;
     }
@@ -14,23 +15,27 @@ public class TaskImp implements Task, Serializable {
     @Override
     public void execute() {
         // primeNumber = 2 ?
-        if(this.primeNumber =< 1){
-            this.primeNumber = false;
-        }else{
+        if (this.primeNumber <= 1) {
+            this.isPrimeNumber = false;
+        } else {
             boolean shouldContinue = true;
             int index = 2;
-            do{
-                if(this.primeNumber % index == 0){
+            do {
+                if (this.primeNumber % index == 0) {
                     shouldContinue = false;
                     this.isPrimeNumber = false;
                 }
                 index++;
-                if(index == this.primeNumber){
+                if (index == this.primeNumber) {
                     shouldContinue = false;
                 }
-            }while(shouldContinue);
+            } while (shouldContinue);
 
-            bagOfResult.addResult(this.primeNumber, this.isPrimeNumber);
+            try {
+                bagOfResult.addResult(this.primeNumber, this.isPrimeNumber);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
         }
     }
-}        
+}
