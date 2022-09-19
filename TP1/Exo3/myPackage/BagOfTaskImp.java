@@ -1,3 +1,5 @@
+package myPackage;
+
 import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -17,7 +19,17 @@ public class BagOfTaskImp implements BagOfTask {
 
     @Override
     public void sendResult(Task task) throws RemoteException {
+        String toPrint = "";
 
+        boolean isPrimeNumber = task.isPrimeNumber();
+
+        if (isPrimeNumber) {
+            toPrint = task.getNumber() + " est un nombre premier";
+        } else {
+            toPrint = task.getNumber() + " n'est pas un nombre premier";
+        }
+
+        System.out.println(toPrint);
     }
 
 }

@@ -1,41 +1,54 @@
-﻿import java.io.Serializable;
+package myPackage;
+
+import java.io.Serializable;
 import java.rmi.RemoteException;
 
 public class TaskImp implements Task, Serializable {
-    BagOfResult bagOfResult;
 
-    int primeNumber;
-    boolean isPrimeNumber = true;
+    private BagOfTask bagOfTask;
 
-    public TaskImp(BagOfResult bagOfResult, int primeNumber) {
-        this.bagOfResult = bagOfResult;
-        this.primeNumber = primeNumber;
+    private int number;
+    private boolean isPrimeNumber = true;
+
+    public TaskImp(BagOfTask bagOfTask, int number) {
+        this.bagOfTask = bagOfTask;
+        this.number = number;
     }
 
     @Override
     public void execute() {
-        // primeNumber = 2 ?
-        if (this.primeNumber <= 1) {
+        // number = 2 ?
+        if (this.number <= 1) {
             this.isPrimeNumber = false;
         } else {
             boolean shouldContinue = true;
             int index = 2;
             do {
-                if (this.primeNumber % index == 0) {
+                if (this.number % index == 0) {
                     shouldContinue = false;
                     this.isPrimeNumber = false;
                 }
                 index++;
-                if (index == this.primeNumber) {
+                if (index == this.number) {
                     shouldContinue = false;
                 }
             } while (shouldContinue);
 
             try {
-                bagOfResult.addResult(this.primeNumber, this.isPrimeNumber);
+                bagOfTask.sendResult(this);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public int getNumber() {
+        return this.number;
+    }
+
+    @Override
+    public boolean isPrimeNumber() {
+        return this.isPrimeNumber;
     }
 }
