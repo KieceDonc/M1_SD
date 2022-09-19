@@ -1,15 +1,15 @@
-package myPackage;
-
 import java.rmi.RemoteException;
+import java.rmi.server.UnicastRemoteObject;
 import java.util.LinkedList;
 import java.util.Queue;
 
-public class BagOfTaskImp implements BagOfTask {
-    Queue<Task> tasks = new LinkedList<Task>();
+public class BagOfTaskImp extends UnicastRemoteObject implements BagOfTask {
+    Queue<TaskImp> tasks = new LinkedList<>();
 
-    @Override
-    public void addTask(Task task) throws RemoteException {
-        tasks.add(task);
+    public BagOfTaskImp() throws RemoteException {
+        for (int index = 0; index < 1000; index++) {
+            tasks.add(new TaskImp(index));
+        }
     }
 
     @Override

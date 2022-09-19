@@ -1,6 +1,6 @@
-package myPackage;
+import java.io.Serializable;
 
-public interface Task {
+public interface Task extends Serializable {
     public void execute();
 
     public int getNumber();

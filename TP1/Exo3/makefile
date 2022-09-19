@@ -1,0 +1,2 @@
+remove:
+	rm -r *.class

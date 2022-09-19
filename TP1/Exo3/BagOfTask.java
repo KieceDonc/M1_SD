@@ -1,7 +1,6 @@
-package myPackage;
+import java.rmi.Remote;
 
-public interface BagOfTask {
-    public void addTask(Task task) throws java.rmi.RemoteException;
+public interface BagOfTask extends Remote {
 
     public Task nextTask() throws java.rmi.RemoteException;
 

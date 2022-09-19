@@ -1,17 +1,10 @@
-package myPackage;
 
-import java.io.Serializable;
-import java.rmi.RemoteException;
-
-public class TaskImp implements Task, Serializable {
-
-    private BagOfTask bagOfTask;
+public class TaskImp implements Task {
 
     private int number;
     private boolean isPrimeNumber = true;
 
-    public TaskImp(BagOfTask bagOfTask, int number) {
-        this.bagOfTask = bagOfTask;
+    public TaskImp(int number) {
         this.number = number;
     }
 
@@ -33,12 +26,6 @@ public class TaskImp implements Task, Serializable {
                     shouldContinue = false;
                 }
             } while (shouldContinue);
-
-            try {
-                bagOfTask.sendResult(this);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
         }
     }
 
