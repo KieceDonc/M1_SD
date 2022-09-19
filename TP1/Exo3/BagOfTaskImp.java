@@ -14,7 +14,11 @@ public class BagOfTaskImp extends UnicastRemoteObject implements BagOfTask {
 
     @Override
     public Task nextTask() throws RemoteException {
-        return (Task) tasks.remove();
+        if (tasks.isEmpty()) {
+            return null;
+        } else {
+            return (Task) tasks.remove();
+        }
     }
 
     @Override
