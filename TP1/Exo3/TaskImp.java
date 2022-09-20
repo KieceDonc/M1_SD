@@ -13,6 +13,8 @@ public class TaskImp implements Task {
         // number = 2 ?
         if (this.number <= 1) {
             this.isPrimeNumber = false;
+        } else if (this.number == 2) {
+            this.isPrimeNumber = true;
         } else {
             boolean shouldContinue = true;
             int index = 2;
