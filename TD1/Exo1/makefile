@@ -1,7 +1,7 @@
-CPROGRAM=exo1_test.c
-OPROGRAM=exo1_test.o
+CPROGRAM=Anneau.c
+OPROGRAM=Anneau.o
 HOST=host_home.txt
-NUMBER_OF_PROCESSOR=2
+NUMBER_OF_PROCESSOR=4
 
 compile: ${CPROGRAM}
 	mpicc -o ${OPROGRAM} ${CPROGRAM}
