@@ -50,7 +50,7 @@ int main(int argc , char *argv []) {
         MPI_Send(&msg,msg_size,MPI_CHAR,world_next_rank,0,MPI_COMM_WORLD);
         */
         int stopCode = 0;
-        for(int processusIndex = 0; processusIndex < world_size; processusIndex++){
+        for(int processusIndex = 1; processusIndex < world_size; processusIndex++){
             MPI_Send(&stopCode,1,MPI_INT,processusIndex,0,MPI_COMM_WORLD);
         }
     } else {
