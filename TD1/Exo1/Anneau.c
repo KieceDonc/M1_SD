@@ -45,28 +45,21 @@ int main(int argc , char *argv []) {
             
             index++;
         }
-    
-        /*strcpy(msg,"Stop");
-        MPI_Send(&msg,msg_size,MPI_CHAR,world_next_rank,0,MPI_COMM_WORLD);
-        */
-        int stopCode = 0;
+
+        strcpy(msg,"Stop");
         for(int processusIndex = 1; processusIndex < world_size; processusIndex++){
-            MPI_Send(&stopCode,1,MPI_INT,processusIndex,0,MPI_COMM_WORLD);
+            MPI_Send(&msg,msg_size,MPI_CHAR,processusIndex,0,MPI_COMM_WORLD);
         }
     } else {
-        MPI_Request request;
         int shouldContinue = 1;
-        
-        MPI_Irecv(&shouldContinue, 1, MPI_INT, 0, 0, MPI_COMM_WORLD, &request);
-        if(!shouldContinue){
-            exit(0);
-        }
 
         while(shouldContinue){
-            MPI_Recv(&msg,msg_size,MPI_CHAR,world_previous_rank,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
+            MPI_Recv(&msg,msg_size,MPI_CHAR,MPI_ANY_SOURCE,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
             printf("%s from processor %s, rank %d out of %d processors\n", msg, processor_name, world_rank, world_size);
             
-            if(strcmp(msg, "Ping") == 0){
+            if(strcmp(msg, "Stop") == 0){
+                shouldContinue = 0;
+            }else if(strcmp(msg, "Ping") == 0){
                 strcpy(msg,"Pong");
                 MPI_Send(&msg,msg_size,MPI_CHAR,world_next_rank,0,MPI_COMM_WORLD);
 
