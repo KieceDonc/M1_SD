@@ -10,7 +10,7 @@ int isIndiceCircle(double x, double y){
 }
 
 double genNumber() {
-    return (double) (rand()) / (double)RAND_MAX ;
+    return (rand() + 1.0) / (RAND_MAX+2.0);
 }
 
 int main(int argc , char *argv []) {
@@ -41,10 +41,10 @@ int main(int argc , char *argv []) {
         int points_inside_circle = 0;
 
         for(int processusIndex = 1; processusIndex < world_size; processusIndex++){
-            int toCount = (int) (points_number / world_size);
+            int toCount = (int) (points_number / (world_size - 1));
             
             if(processusIndex == world_size - 1){
-                toCount = points_number - toCount * (world_size - 1);
+                toCount = points_number + toCount - toCount * (world_size - 1 );
             }
 
             printf("Processus %d have %d points\n", processusIndex, toCount);
@@ -60,9 +60,11 @@ int main(int argc , char *argv []) {
             remaining_processus--;
         }
 
+
         double pi = 4 * points_inside_circle / (double)points_number;
         printf("Pi = %f\n",pi);
     } else {
+        srand(world_rank);
         MPI_Recv(&msg,1,MPI_INT,0,0,MPI_COMM_WORLD,MPI_STATUS_IGNORE);
         int toCount = msg;
         printf("Processus %d received %d points to count\n", world_rank, toCount);
