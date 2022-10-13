@@ -1,45 +1,33 @@
+import java.nio.channels.Channel;
 import java.rmi.AlreadyBoundException;
 import java.rmi.RemoteException;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
+import java.sql.Connection;
+
+import org.apache.commons.lang.SerializationUtils;
+
 import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DeliverCallback;
+import com.rabbitmq.client.MessageProperties;
 
 public class Server {
 
-    private static final String EXCHANGE_NAME = "logs";
+    private static final String TASK_QUEUE_NAME = "task_queue";
 
     public static void main(String[] args) {
-        try {
-            BagOfTaskImp bagOfTask = new BagOfTaskImp();
+        
+        ConnectionFactory factory = new ConnectionFactory();
+        factory.setHost("localhost");
+        try (Connection connection = factory.newConnection();
+                Channel channel = connection.createChannel()) {
 
-            ConnectionFactory factory = new ConnectionFactory();
-            factory.setHost("127.0.0.1");
-            Connection connection = factory.newConnection();
-            Channel channel = connection.createChannel();
-    
-            channel.exchangeDeclare(EXCHANGE_NAME, "topic");
-            String queueName = channel.queueDeclare().getQueue();
-            channel.queueBind(queueName, EXCHANGE_NAME, "");
-    
-            System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
-    
-            DeliverCallback deliverCallback = (consumerTag, delivery) -> {
-                Message message = SerializationUtils.deserialize(delivery.getBody());
-                switch(message.getCode()) {
-                    case Message.CODE_ASK_TASK:
-                      Task nextTask = bagOfTask.nextTask();
-                      Message sendTask = new Message(Message.CODE_RECEIVE_TASK,nextTask);
-                      break;
-                    case y:
-                      // code block
-                      break;
-                    default:
-                      // code block
-                  }
-            };
-            channel.basicConsume(queueName, true, deliverCallback, consumerTag -> { });
-        } catch (RemoteException | AlreadyBoundException e) {
+            channel.queueDeclare(TASK_QUEUE_NAME, true, false, false, null);
+
+            Task task = bagOfTask.nextTask();
+            while(task!= null){
+                channel.basicPublish("", TASK_QUEUE_NAME, MessageProperties.PERSISTENT_TEXT_PLAIN, SerializationUtils.serialize(task));
+
+                task = bagOfTask.nextTask(); 
+            }
+        }catch (RemoteException | AlreadyBoundException e) {
             e.printStackTrace();
         }
     }

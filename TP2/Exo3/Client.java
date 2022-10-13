@@ -1,36 +1,37 @@
-import java.rmi.RemoteException;
+import java.nio.channels.Channel;
+import java.sql.Connection;
+
+import org.apache.commons.lang.SerializationUtils;
+
+import com.rabbitmq.client.ConnectionFactory;
+import com.rabbitmq.client.DeliverCallback;
 
 public class Client extends Thread {
 
-  private static final String EXCHANGE_NAME = "logs";
+  private static final String TASK_QUEUE_NAME = "task_queue";
 
   public static void main(String arg[]) {
     try {
       ConnectionFactory factory = new ConnectionFactory();
       factory.setHost("127.0.0.1");
       Connection connection = factory.newConnection();
-      Channel channel = connection.createChannel() 
-      channel.exchangeDeclare(EXCHANGE_NAME, "topic");
+      Channel channel = connection.createChannel();
 
-      for (int index = 0; index < 200; index++) {
-        Message askTask = new Message(Message.CODE_ASK_TASK,null);
-        channel.basicPublish(EXCHANGE_NAME, "", null, SerializationUtils.serialize(askTask));
-        System.out.println(" [x] Sent '" + message + "'");
-        Task task =;
-
-        if (task != null) {
+      channel.queueDeclare(TASK_QUEUE_NAME, true, false, false, null);
+      System.out.println(" [*] Waiting for messages. To exit press CTRL+C");
+  
+      channel.basicQos(1);
+  
+      DeliverCallback deliverCallback = (consumerTag, delivery) -> {
+          Task task = SerializationUtils.deserialize(delivery.getBody());
+          
           task.execute();
 
-          try {
-            stub.sendResult(task);
-          } catch (RemoteException e) {
-            e.printStackTrace();
-          }
+          System.out.println(" [x] Done");
+          channel.basicAck(delivery.getEnvelope().getDeliveryTag(), false);
 
-        } else {
-          sleep(1000);
-        }
-      }
+      };
+      channel.basicConsume(TASK_QUEUE_NAME, false, deliverCallback, consumerTag -> { });
     } catch (Exception e) {
       System.err.println("Erreur :" + e);
     }
