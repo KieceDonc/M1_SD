@@ -1,3 +1,5 @@
+package com.vvdev;
+
 import java.rmi.Remote;
 
 public interface BagOfTask extends Remote {
