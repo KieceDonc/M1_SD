@@ -14,78 +14,81 @@ import akka.event.Logging;
 
 public class StockActor extends AbstractActor {
 
+    private int numberOfFruits = 0;
+
     private LoggingAdapter log = Logging.getLogger(this.getContext().system(), this);
 
     private StockActor() {
+        this.numberOfFruits = 100;
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(CreateChild.class, message -> createChild(message))
-                .match(ChangeString.class, message -> changeString(message, getSender()))
+                .match(OrderReception.class, message -> orderReception(message, getSender()))
                 .build();
     }
-    /*
-     * public void createChild(final CreateChild message) {
-     * int childLeft = message.getChildLeft() - 1;
-     * if (childLeft > 0) {
-     * ActorSystem actorSystem = ActorSystem.create();
-     * ActorRef defaultActor = actorSystem.actorOf(DefaultActor.props());
-     * 
-     * defaultActor.tell(new DefaultActor.CreateChild(childLeft),
-     * ActorRef.noSender());
-     * this.child = defaultActor;
-     * } else {
-     * child = null;
-     * }
-     * }
-     * 
-     * public void changeString(final ChangeString message, ActorRef actor) {
-     * try {
-     * char[] messageChars = message.getString().toCharArray();
-     * int indexToReplace = new Random().nextInt(message.getString().length());
-     * messageChars[indexToReplace] = (char) (new Random().nextInt(26) + 'a');
-     * String newMessage = String.valueOf(messageChars);
-     * 
-     * if (child != null) {
-     * CompletionStage<Object> result = Patterns.ask(child, new
-     * DefaultActor.ChangeString(newMessage),
-     * Duration.ofSeconds(10));
-     * newMessage = (String) result.toCompletableFuture().get();
-     * }
-     * actor.tell(newMessage, this.getSelf());
-     * } catch (Exception e) {
-     * e.printStackTrace();
-     * }
-     * }
-     * 
-     * public static Props props() {
-     * return Props.create(DefaultActor.class);
-     * }
-     * 
-     * public static class CreateChild {
-     * private int childLeft;
-     * 
-     * public CreateChild(int childLeft) {
-     * this.childLeft = childLeft;
-     * }
-     * 
-     * public int getChildLeft() {
-     * return this.childLeft;
-     * }
-     * }
-     * 
-     * public static class ChangeString {
-     * private String string;
-     * 
-     * public ChangeString(String string) {
-     * this.string = string;
-     * }
-     * 
-     * public String getString() {
-     * return this.string;
-     * }
-     * }
-     */
+
+    public void orderReception(final OrderReception message, ActorRef actor) {
+        int numberOfFruitsOrder = message.getNumberOfFruitsOrder();
+        System.out.println("New order received, number of fruits ordered : " + numberOfFruitsOrder
+                + ", current stock : " + this.numberOfFruits);
+        if (this.numberOfFruits > numberOfFruitsOrder) {
+            System.out.println("Sending order to client, number of fruits : " + numberOfFruitsOrder);
+            this.deStock(numberOfFruitsOrder);
+            actor.tell(numberOfFruitsOrder, this.getSelf());
+            this.reStock(numberOfFruitsOrder);
+        } else {
+            System.out.println("Unable to send or to client, number of fruits : " + numberOfFruitsOrder);
+            actor.tell(0, this.getSelf());
+            this.reStock(numberOfFruitsOrder);
+        }
+    }
+
+    private void deStock(int numberOfFruitsToDeStock) {
+        System.out.println("deStock of " + numberOfFruitsToDeStock + " fruits");
+        this.numberOfFruits -= numberOfFruitsToDeStock;
+    }
+
+    private void reStock(int numberOfFruitsToReStock) {
+
+        StockActor stockActor = this;
+        Thread reStockThread = new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                try {
+                    int reStockDelay = (int) (Math.random() * (10000 - 3000)) + 3000;
+                    int numberOfFruitsReceived = (int) ((double) numberOfFruitsToReStock * 1.2
+                            - (int) (Math.random()
+                                    * ((double) numberOfFruitsToReStock * 0.2 - (double) numberOfFruitsToReStock * 0.2))
+                            + (double) numberOfFruitsToReStock * 0.2);
+                    Thread.sleep(reStockDelay);
+                    stockActor.numberOfFruits += numberOfFruitsReceived;
+
+                    System.out.println("reStock of " + numberOfFruitsReceived + " fruits");
+                } catch (Exception e) {
+                    System.out.println(e);
+                }
+            }
+        });
+
+        reStockThread.start();
+    }
+
+    public static Props props() {
+        return Props.create(StockActor.class);
+    }
+
+    public static class OrderReception {
+        private int numberOfFruitsOrder;
+
+        public OrderReception(int numberOfFruitsOrder) {
+            this.numberOfFruitsOrder = numberOfFruitsOrder;
+        }
+
+        public int getNumberOfFruitsOrder() {
+            return this.numberOfFruitsOrder;
+        }
+    }
 }
