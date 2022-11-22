@@ -6,7 +6,7 @@
 
     }
 
-    public class ClientBalance{
-        .
+    public class ClientBalance {
+
     }
 }
