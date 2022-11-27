@@ -1,17 +1,17 @@
 package sd.akka;
 
 import java.time.Duration;
-import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CompletionStage;
 
 import akka.actor.ActorRef;
 import akka.actor.ActorSystem;
 import akka.pattern.Patterns;
 import akka.routing.RoundRobinPool;
-import sd.akka.actor.StockActor;
+import sd.akka.actor.BankActor;
+import sd.akka.actor.ClientActor;
 import akka.pattern.Patterns;
 import java.time.Duration;
-import java.util.concurrent.CompletionStage;
 
 public class App {
 
@@ -54,5 +54,9 @@ public class App {
          * e.printStackTrace();
          * }
          */
+
+        ActorSystem actorSystem = ActorSystem.create();
+        ActorRef bankActor = actorSystem.actorOf(BankActor.props());
+        ActorRef clientActor = actorSystem.actorOf(ClientActor.props(bankActor));
     }
 }
