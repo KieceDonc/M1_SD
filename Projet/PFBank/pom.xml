@@ -10,6 +10,13 @@
 
 	<name>PFBank</name>
 
+  <modules>
+		<module>shared</module>
+		<module>client</module>
+		<module>bank</module>
+		<module>banker</module>
+	</modules>
+
 	<properties>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<maven.compiler.source>1.8</maven.compiler.source>
@@ -37,11 +44,4 @@
 		</dependency>
 	</dependencies>
 
-	<modules>
-		<module>client</module>
-		<module>bank</module>
-		<module>banker</module>
-		<module>shared</module>
-	</modules>
-  
 </project>

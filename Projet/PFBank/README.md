@@ -11,17 +11,17 @@ mvn clean compile install
 Lancer d'abord la banque :
 
 ```
-mvn -pl banque -Dexec.mainClass="com.perfect.bank"
+mvn exec:java -pl bank -Dexec.mainClass="com.perfect.bank.App"
 ```
 
 Lancer ensuite des banquiers :
 
 ```
-mvn -pl banker -Dexec.mainClass="com.perfect.bank"
+mvn exec:java -pl banker -Dexec.mainClass="com.perfect.banker.App"
 ```
 
 Lancer enfin des clients :
 
 ```
-mvn -pl client -Dexec.mainClass="com.perfect.bank"
+mvn exec:java -pl client -Dexec.mainClass="com.perfect.bank.App"
 ```
