@@ -1,24 +1,18 @@
 package com.perfect.bank;
 
-import java.time.Duration;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
-
 import akka.actor.ActorRef;
 import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
-import akka.pattern.Patterns;
-import akka.routing.RoundRobinPool;
-import com.typesafe.config.ConfigFactory;
 
-import com.perfect.bank.message.HelloWorldMessage;
+import com.perfect.bank.actor.ClientActor;
+
+import com.typesafe.config.ConfigFactory;
 
 public class App {
     public static void main(String[] args) {
         ActorSystem actorSystem = ActorSystem.create("Client", ConfigFactory.load("client.conf"));
-        ActorSelection selection = actorSystem.actorSelection("akka://myActorSystem@127.0.0.1:8000/user/helloActor");
-
-        selection.tell(new HelloWorldMessage.SayHello("Akka Remote"), ActorRef.noSender());
+        ActorSelection bankActor = actorSystem.actorSelection("akka://myActorSystem@127.0.0.1:8000/user/bankActor");
+        ActorRef clientActor = actorSystem.actorOf(ClientActor.props(bankActor), "clientActor");
 
         // En attente de Ctrl-C
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
