@@ -68,6 +68,18 @@ public class BankActor extends AbstractActor {
         return this.lastUID++;
     }
 
+    public void withdraw() {
+
+    }
+
+    public void deposit() {
+
+    }
+
+    public void getBalance() {
+
+    }
+
     public static Props props() {
         return Props.create(BankActor.class);
     }
