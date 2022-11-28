@@ -12,26 +12,34 @@ public class Messages {
         }
     }
 
-    public static class GetBankerUID implements Message {
-        public GetBankerUID() {
+    public static class DeclareAsBanker implements Message {
+        public DeclareAsBanker() {
         }
     }
 
-    public class Withdraw extends BankOperation {
+    public static class Withdraw extends BankOperation {
+
+        public Withdraw() {
+            super(-1, -1);
+        }
 
         public Withdraw(int clientUID, double amount) {
             super(clientUID, amount);
         }
     }
 
-    public class Deposit extends BankOperation {
+    public static class Deposit extends BankOperation {
+
+        public Deposit() {
+            super(-1, -1);
+        }
 
         public Deposit(int clientUID, double amount) {
             super(clientUID, amount);
         }
     }
 
-    private class BankOperation extends ClientInfo implements Message {
+    private static class BankOperation extends ClientInfo implements Message {
 
         private double amount;
 
@@ -45,14 +53,18 @@ public class Messages {
         }
     }
 
-    public class GetBalance extends ClientInfo implements Message {
+    public static class GetBalance extends ClientInfo implements Message {
+
+        public GetBalance() {
+            super(-1);
+        }
 
         public GetBalance(int clientUID) {
             super(clientUID);
         }
     }
 
-    private class ClientInfo {
+    private static class ClientInfo {
 
         private int clientUID;
 

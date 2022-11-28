@@ -24,6 +24,29 @@ public class ClientActor extends AbstractActor {
     public ClientActor(ActorSelection bankActor) {
         this.bankActor = bankActor;
         this.getUID();
+
+        for (int i = 0; i < 100; i++) {
+            try {
+                Thread.sleep(1000);
+                switch (i % 3) {
+                    case 0: {
+                        deposit(5.0);
+                        break;
+                    }
+                    case 1: {
+                        withdraw(5.0);
+                        break;
+                    }
+                    case 2: {
+                        this.log.info("Balance : " + getBalance());
+                        break;
+                    }
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+
+        }
     }
 
     @Override
@@ -50,14 +73,23 @@ public class ClientActor extends AbstractActor {
     }
 
     public void deposit(double amount) {
-
+        bankActor.tell(new Messages.Deposit(this.getUID(), amount), getSelf());
     }
 
     public void withdraw(double amount) {
-
+        bankActor.tell(new Messages.Withdraw(this.getUID(), amount), getSelf());
     }
 
     public int getBalance() {
+        try {
+            CompletionStage<Object> result = Patterns.ask(bankActor,
+                    new Messages.GetBalance(this.getUID()),
+                    Duration.ofSeconds(10));
+
+            return (int) result.toCompletableFuture().get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+        }
         return -1;
     }
 

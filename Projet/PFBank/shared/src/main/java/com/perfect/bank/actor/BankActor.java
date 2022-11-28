@@ -1,10 +1,12 @@
 package com.perfect.bank.actor;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
-import com.perfect.bank.messages.Messages.GetBankerUID;
+import com.perfect.bank.messages.Messages.DeclareAsBanker;
+import com.perfect.bank.messages.Messages.Deposit;
+import com.perfect.bank.messages.Messages.GetBalance;
 import com.perfect.bank.messages.Messages.GetClientUID;
+import com.perfect.bank.messages.Messages.Withdraw;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -16,13 +18,9 @@ public class BankActor extends AbstractActor {
 
     private LoggingAdapter log = Logging.getLogger(this.getContext().system(), this);
 
-    // Describe which banker a client has
-    // Key : ClientUID
-    // Value : BankerUID
-    private HashMap<Integer, Integer> relations = new HashMap<>();
-
-    // List of all bankersUID
-    private ArrayList<Integer> bankers = new ArrayList<>();
+    // List of all bankers
+    private ArrayList<ActorRef> bankers = new ArrayList<>();
+    private int indexOfLastBanker = 0;
 
     private int lastUID = 0;
 
@@ -32,17 +30,12 @@ public class BankActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(GetBankerUID.class, message -> getBankerUID(getSender()))
                 .match(GetClientUID.class, message -> getClientUID(getSender()))
+                .match(DeclareAsBanker.class, message -> registerBanker(getSender()))
+                .match(Deposit.class, message -> clientDeposit(getSender(), message))
+                .match(Withdraw.class, message -> clientWithdraw(getSender(), message))
+                .match(GetBalance.class, message -> clientGetBalance(getSender(), message))
                 .build();
-    }
-
-    public void getBankerUID(ActorRef actor) {
-        Integer bankerUID = this.generateUID();
-        actor.tell(bankerUID, this.getSelf());
-        bankers.add(bankerUID);
-
-        this.log.info("New banker, UID : " + bankerUID);
     }
 
     public void getClientUID(ActorRef actor) {
@@ -50,17 +43,15 @@ public class BankActor extends AbstractActor {
         actor.tell(clientUID, this.getSelf());
 
         this.log.info("New client, UID : " + clientUID);
-
-        int bankerUID = getBankerUIDForClient();
-        relations.put(clientUID, bankerUID);
-
-        this.log.info("New relation, clientUID : " + clientUID + ", bankerUID : " + bankerUID);
     }
 
-    public int getBankerUIDForClient() {
-        int bankersNumber = bankers.size();
-        int indexOfBanker = (int) Math.random() * bankersNumber;
-        return this.bankers.get(indexOfBanker);
+    public void registerBanker(ActorRef banker) {
+        // Banker isn't register yet
+        if (bankers.lastIndexOf(banker) == -1) {
+            bankers.add(banker);
+            this.log.info("New banker register");
+        }
+
     }
 
     public synchronized int generateUID() {
@@ -68,16 +59,23 @@ public class BankActor extends AbstractActor {
         return this.lastUID++;
     }
 
-    public void withdraw() {
-
+    public void clientDeposit(ActorRef actor, Deposit depositMsg) {
+        this.getABanker().forward(depositMsg, getContext());
     }
 
-    public void deposit() {
-
+    public void clientWithdraw(ActorRef actor, Withdraw withdrawMsg) {
+        this.getABanker().forward(withdrawMsg, getContext());
     }
 
-    public void getBalance() {
+    public void clientGetBalance(ActorRef actor, GetBalance getBalanceMsg) {
+        this.getABanker().forward(getBalanceMsg, getContext());
+    }
 
+    public synchronized ActorRef getABanker() {
+        if (indexOfLastBanker >= bankers.size()) {
+            indexOfLastBanker = 0;
+        }
+        return bankers.get(indexOfLastBanker++);
     }
 
     public static Props props() {

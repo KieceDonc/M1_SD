@@ -2,13 +2,13 @@ package com.perfect.bank.actor;
 
 import akka.actor.ActorSelection;
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.pattern.Patterns;
-import java.time.Duration;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
 
 import com.perfect.bank.messages.Messages;
+import com.perfect.bank.messages.Messages.Deposit;
+import com.perfect.bank.messages.Messages.GetBalance;
+import com.perfect.bank.messages.Messages.Withdraw;
 
 import akka.event.LoggingAdapter;
 import akka.event.Logging;
@@ -23,30 +23,32 @@ public class BankerActor extends AbstractActor {
 
   public BankerActor(ActorSelection bankActor) {
     this.bankActor = bankActor;
-    this.getUID();
+    this.declareToBank();
   }
 
   @Override
   public Receive createReceive() {
-    return receiveBuilder().build();
+    return receiveBuilder()
+        .match(Deposit.class, message -> clientDeposit(getSender(), message))
+        .match(Withdraw.class, message -> clientWithdraw(getSender(), message))
+        .match(GetBalance.class, message -> clientGetBalance(getSender(), message))
+        .build();
   }
 
-  public int getUID() {
-    try {
-      if (this.UID < 0) {
-        CompletionStage<Object> result = Patterns.ask(bankActor,
-            new Messages.GetBankerUID(),
-            Duration.ofSeconds(10));
+  public void declareToBank() {
+    bankActor.tell(new Messages.DeclareAsBanker(), getSelf());
+  }
 
-        this.UID = (int) result.toCompletableFuture().get();
+  public void clientDeposit(ActorRef actor, Deposit depositMsg) {
+    this.log.info("Deposit succeed");
+  }
 
-        this.log.info("UID reçu : " + this.UID);
-      }
-    } catch (InterruptedException | ExecutionException e) {
-      e.printStackTrace();
-    }
+  public void clientWithdraw(ActorRef actor, Withdraw withdrawMsg) {
+    this.log.info("Widthdraw succeed");
+  }
 
-    return this.UID;
+  public void clientGetBalance(ActorRef actor, GetBalance getBalanceMsg) {
+    actor.tell(500.0, getSelf());
   }
 
   public static Props props(ActorSelection bankActor) {
