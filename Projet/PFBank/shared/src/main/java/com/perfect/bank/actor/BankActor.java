@@ -1,31 +1,71 @@
 package com.perfect.bank.actor;
 
-import akka.actor.ActorRef;
+import java.util.ArrayList;
+import java.util.HashMap;
+
+import com.perfect.bank.messages.Messages.GetBankerUID;
+import com.perfect.bank.messages.Messages.GetClientUID;
 
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
 import akka.actor.Props;
-
-import akka.event.LoggingAdapter;
 import akka.event.Logging;
-
-import com.perfect.bank.messages.Messages.GetUID;
+import akka.event.LoggingAdapter;
 
 public class BankActor extends AbstractActor {
 
     private LoggingAdapter log = Logging.getLogger(this.getContext().system(), this);
 
-    private int clientLastUID = 0;
+    // Describe which banker a client has
+    // Key : ClientUID
+    // Value : BankerUID
+    private HashMap<Integer, Integer> relations = new HashMap<>();
+
+    // List of all bankersUID
+    private ArrayList<Integer> bankers = new ArrayList<>();
+
+    private int lastUID = 0;
 
     public BankActor() {
     }
 
     @Override
     public Receive createReceive() {
-        return receiveBuilder().match(GetUID.class, message -> getUID(getSender())).build();
+        return receiveBuilder()
+                .match(GetBankerUID.class, message -> getBankerUID(getSender()))
+                .match(GetClientUID.class, message -> getClientUID(getSender()))
+                .build();
     }
 
-    public synchronized void getUID(ActorRef actor) {
-        actor.tell(clientLastUID++, this.getSelf());
+    public void getBankerUID(ActorRef actor) {
+        Integer bankerUID = this.generateUID();
+        actor.tell(bankerUID, this.getSelf());
+        bankers.add(bankerUID);
+
+        this.log.info("New banker, UID : " + bankerUID);
+    }
+
+    public void getClientUID(ActorRef actor) {
+        Integer clientUID = this.generateUID();
+        actor.tell(clientUID, this.getSelf());
+
+        this.log.info("New client, UID : " + clientUID);
+
+        int bankerUID = getBankerUIDForClient();
+        relations.put(clientUID, bankerUID);
+
+        this.log.info("New relation, clientUID : " + clientUID + ", bankerUID : " + bankerUID);
+    }
+
+    public int getBankerUIDForClient() {
+        int bankersNumber = bankers.size();
+        int indexOfBanker = (int) Math.random() * bankersNumber;
+        return this.bankers.get(indexOfBanker);
+    }
+
+    public synchronized int generateUID() {
+        this.log.info("New UID given : " + this.lastUID);
+        return this.lastUID++;
     }
 
     public static Props props() {

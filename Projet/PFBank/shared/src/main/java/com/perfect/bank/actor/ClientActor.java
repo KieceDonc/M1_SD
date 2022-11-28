@@ -35,18 +35,30 @@ public class ClientActor extends AbstractActor {
         try {
             if (this.UID < 0) {
                 CompletionStage<Object> result = Patterns.ask(bankActor,
-                        new Messages.GetUID(),
+                        new Messages.GetClientUID(),
                         Duration.ofSeconds(10));
 
                 this.UID = (int) result.toCompletableFuture().get();
 
-                System.out.println("[Client] UID reçu : " + this.UID);
+                this.log.info("UID reçu : " + this.UID);
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
 
         return this.UID;
+    }
+
+    public void deposit(double amount) {
+
+    }
+
+    public void withdraw(double amount) {
+
+    }
+
+    public int getBalance() {
+        return -1;
     }
 
     public static Props props(ActorSelection bankActor) {

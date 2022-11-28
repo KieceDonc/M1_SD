@@ -17,7 +17,7 @@ mvn exec:java -pl bank -Dexec.mainClass="com.perfect.bank.App"
 Lancer ensuite des banquiers :
 
 ```
-mvn exec:java -pl banker -Dexec.mainClass="com.perfect.banker.App"
+mvn exec:java -pl banker -Dexec.mainClass="com.perfect.bank.App"
 ```
 
 Lancer enfin des clients :
