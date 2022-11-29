@@ -19,20 +19,12 @@ public class Messages {
 
     public static class Withdraw extends BankOperation {
 
-        public Withdraw() {
-            super(-1, -1);
-        }
-
         public Withdraw(int clientUID, double amount) {
             super(clientUID, amount);
         }
     }
 
     public static class Deposit extends BankOperation {
-
-        public Deposit() {
-            super(-1, -1);
-        }
 
         public Deposit(int clientUID, double amount) {
             super(clientUID, amount);
@@ -55,16 +47,12 @@ public class Messages {
 
     public static class GetBalance extends ClientInfo implements Message {
 
-        public GetBalance() {
-            super(-1);
-        }
-
         public GetBalance(int clientUID) {
             super(clientUID);
         }
     }
 
-    private static class ClientInfo {
+    private static class ClientInfo implements Message {
 
         private int clientUID;
 

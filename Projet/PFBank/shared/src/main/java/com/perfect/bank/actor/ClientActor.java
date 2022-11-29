@@ -21,37 +21,23 @@ public class ClientActor extends AbstractActor {
 
     private int UID = -1;
 
+    public ClientActor(ActorSelection bankActor, int clientUID) {
+        this.bankActor = bankActor;
+        this.UID = clientUID;
+    }
+
     public ClientActor(ActorSelection bankActor) {
         this.bankActor = bankActor;
         this.getUID();
-
-        for (int i = 0; i < 100; i++) {
-            try {
-                Thread.sleep(1000);
-                switch (i % 3) {
-                    case 0: {
-                        deposit(5.0);
-                        break;
-                    }
-                    case 1: {
-                        withdraw(5.0);
-                        break;
-                    }
-                    case 2: {
-                        this.log.info("Balance : " + getBalance());
-                        break;
-                    }
-                }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-
-        }
     }
 
     @Override
     public Receive createReceive() {
-        return receiveBuilder().build();
+        return receiveBuilder()
+                .match(Deposit.class, message -> deposit(message))
+                .match(Withdraw.class, message -> withdraw(message))
+                .match(GetBalance.class, message -> getBalance())
+                .build();
     }
 
     public int getUID() {
@@ -63,7 +49,7 @@ public class ClientActor extends AbstractActor {
 
                 this.UID = (int) result.toCompletableFuture().get();
 
-                this.log.info("UID reçu : " + this.UID);
+                System.out.println("UID reçu : " + this.UID);
             }
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -80,20 +66,24 @@ public class ClientActor extends AbstractActor {
         bankActor.tell(new Messages.Withdraw(this.getUID(), amount), getSelf());
     }
 
-    public int getBalance() {
+    public double getBalance() {
         try {
             CompletionStage<Object> result = Patterns.ask(bankActor,
                     new Messages.GetBalance(this.getUID()),
                     Duration.ofSeconds(10));
 
-            return (int) result.toCompletableFuture().get();
+            return (double) result.toCompletableFuture().get();
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
         }
-        return -1;
+        return 0.0d;
     }
 
     public static Props props(ActorSelection bankActor) {
         return Props.create(ClientActor.class, bankActor);
+    }
+
+    public static Props props(ActorSelection bankActor, int clientUID) {
+        return Props.create(ClientActor.class, bankActor, clientUID);
     }
 }
