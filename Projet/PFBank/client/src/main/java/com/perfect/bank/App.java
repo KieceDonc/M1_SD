@@ -34,15 +34,15 @@ public class App {
         showBankMenu();
         switch (Read.rInt()) {
             case 1: {
-                clientActor.tell(new Messages.Deposit(-1, getHowMuch()), clientActor.noSender());
+                clientActor.tell(new Messages.Deposit(-1, getHowMuch()), ActorRef.noSender());
                 break;
             }
             case 2: {
-                clientActor.tell(new Messages.Withdraw(-1, getHowMuch()), clientActor.noSender());
+                clientActor.tell(new Messages.Withdraw(-1, getHowMuch()), ActorRef.noSender());
                 break;
             }
             case 3: {
-                clientActor.tell(new Messages.GetBalance(), clientActor.noSender());
+                clientActor.tell(new Messages.GetBalance(-1), ActorRef.noSender());
                 break;
             }
             default: {

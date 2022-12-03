@@ -5,7 +5,7 @@ import akka.actor.ActorSelection;
 import akka.actor.ActorSystem;
 
 import com.perfect.bank.actor.BankerActor;
-
+import com.perfect.bank.messages.Messages;
 import com.typesafe.config.ConfigFactory;
 
 public class App {
@@ -16,6 +16,7 @@ public class App {
 
         // En attente de Ctrl-C
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            bankerActor.tell(new Messages.Shutdown(), ActorRef.noSender());
             actorSystem.terminate();
             System.out.println("System terminated.");
         }));

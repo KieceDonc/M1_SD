@@ -9,6 +9,9 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
 import com.perfect.bank.messages.Messages;
+import com.perfect.bank.messages.Messages.Deposit;
+import com.perfect.bank.messages.Messages.GetBalance;
+import com.perfect.bank.messages.Messages.Withdraw;
 
 import akka.event.LoggingAdapter;
 import akka.event.Logging;
@@ -34,8 +37,8 @@ public class ClientActor extends AbstractActor {
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(Deposit.class, message -> deposit(message))
-                .match(Withdraw.class, message -> withdraw(message))
+                .match(Deposit.class, message -> deposit(message.getAmount()))
+                .match(Withdraw.class, message -> withdraw(message.getAmount()))
                 .match(GetBalance.class, message -> getBalance())
                 .build();
     }

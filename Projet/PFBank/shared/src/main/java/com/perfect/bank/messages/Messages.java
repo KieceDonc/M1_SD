@@ -64,4 +64,11 @@ public class Messages {
             return this.clientUID;
         }
     }
+
+    public static class Shutdown implements Message {
+
+        public Shutdown() {
+
+        }
+    }
 }
