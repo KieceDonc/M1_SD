@@ -1,8 +1,8 @@
 package com.perfect.bank.actor;
 
-import akka.actor.ActorSelection;
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
+import akka.actor.ActorSelection;
 import akka.actor.Props;
 
 import java.sql.SQLException;
@@ -13,6 +13,7 @@ import com.perfect.bank.exceptions.NotEnoughMoneyException;
 import com.perfect.bank.messages.Messages;
 import com.perfect.bank.messages.Messages.Deposit;
 import com.perfect.bank.messages.Messages.GetBalance;
+import com.perfect.bank.messages.Messages.IsClientExist;
 import com.perfect.bank.messages.Messages.Withdraw;
 import com.perfect.bank.messages.Messages.Shutdown;
 
@@ -42,15 +43,28 @@ public class BankerActor extends AbstractActor {
   @Override
   public Receive createReceive() {
     return receiveBuilder()
+        .match(IsClientExist.class, message -> isClientExist(getSender(), message.getClientUID()))
         .match(Deposit.class, message -> clientDeposit(getSender(), message))
         .match(Withdraw.class, message -> clientWithdraw(getSender(), message))
         .match(GetBalance.class, message -> clientGetBalance(getSender(), message))
-        .match(Shutdown.class, message -> shtudown())
+        .match(Shutdown.class, message -> shutdown())
         .build();
   }
 
   public void declareToBank() {
     bankActor.tell(new Messages.DeclareAsBanker(), getSelf());
+  }
+
+  public void isClientExist(ActorRef actor, int clientUID) {
+    boolean exist = false;
+
+    try {
+      exist = this.plsqlInterface.isClientInDB(clientUID);
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+
+    actor.tell(exist, getSelf());
   }
 
   public void clientDeposit(ActorRef actor, Deposit depositMsg) {
@@ -78,7 +92,7 @@ public class BankerActor extends AbstractActor {
   public void clientGetBalance(ActorRef actor, GetBalance getBalanceMsg) {
     try {
       double balance = this.plsqlInterface.getBalance(getBalanceMsg.getClientUID());
-      actor.tell(balance, getSelf());
+      actor.tell(new Messages.GetBalanceResponse(balance), getSelf());
     } catch (SQLException e) {
       e.printStackTrace();
       actor.tell(-1, getSelf());
@@ -88,7 +102,7 @@ public class BankerActor extends AbstractActor {
     }
   }
 
-  private void shtudown() {
+  private void shutdown() {
     try {
       plsqlInterface.closeDBConnection();
     } catch (Exception e) {

@@ -2,15 +2,18 @@ package com.perfect.bank.actor;
 
 import akka.actor.ActorSelection;
 import akka.actor.AbstractActor;
+import akka.actor.ActorRef;
 import akka.actor.Props;
 import akka.pattern.Patterns;
 import java.time.Duration;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 
+import com.perfect.bank.classes.Read;
 import com.perfect.bank.messages.Messages;
 import com.perfect.bank.messages.Messages.Deposit;
 import com.perfect.bank.messages.Messages.GetBalance;
+import com.perfect.bank.messages.Messages.GetBalanceResponse;
 import com.perfect.bank.messages.Messages.Withdraw;
 
 import akka.event.LoggingAdapter;
@@ -27,11 +30,13 @@ public class ClientActor extends AbstractActor {
     public ClientActor(ActorSelection bankActor, int clientUID) {
         this.bankActor = bankActor;
         this.UID = clientUID;
+        this.loop();
     }
 
     public ClientActor(ActorSelection bankActor) {
         this.bankActor = bankActor;
         this.getUID();
+        this.loop();
     }
 
     @Override
@@ -39,7 +44,7 @@ public class ClientActor extends AbstractActor {
         return receiveBuilder()
                 .match(Deposit.class, message -> deposit(message.getAmount()))
                 .match(Withdraw.class, message -> withdraw(message.getAmount()))
-                .match(GetBalance.class, message -> getBalance())
+                .match(GetBalanceResponse.class, message -> getBalanceResponse(message.getBalance()))
                 .build();
     }
 
@@ -62,24 +67,65 @@ public class ClientActor extends AbstractActor {
     }
 
     public void deposit(double amount) {
-        bankActor.tell(new Messages.Deposit(this.getUID(), amount), getSelf());
+        bankActor.tell(new Messages.Deposit(this.UID, amount), getSelf());
     }
 
     public void withdraw(double amount) {
-        bankActor.tell(new Messages.Withdraw(this.getUID(), amount), getSelf());
+        bankActor.tell(new Messages.Withdraw(this.UID, amount), getSelf());
     }
 
-    public double getBalance() {
-        try {
-            CompletionStage<Object> result = Patterns.ask(bankActor,
-                    new Messages.GetBalance(this.getUID()),
-                    Duration.ofSeconds(10));
+    public void getBalance() {
+        this.bankActor.tell(new Messages.GetBalance(this.UID), this.getSelf());
+    }
 
-            return (double) result.toCompletableFuture().get();
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
+    public void getBalanceResponse(double balance) {
+        String menu = "----------------------------------\n";
+        menu += "\tVotre solde : " + balance + "\n";
+        menu += "----------------------------------\n";
+        System.out.println(menu);
+        this.loop();
+    }
+
+    public void loop() {
+        showBankMenu();
+        switch (Read.rInt()) {
+            case 1: {
+                deposit(this.getHowMuch());
+                this.loop();
+                break;
+            }
+            case 2: {
+                withdraw(this.getHowMuch());
+                this.loop();
+                break;
+            }
+            case 3: {
+                this.getBalance();
+                break;
+            }
+            default: {
+                System.exit(0);
+            }
         }
-        return 0.0d;
+    }
+
+    public void showBankMenu() {
+        String menu = "----------------------------------\n";
+        menu += "\tVeuillez choisir une action\n";
+        menu += "\t1 - Déposer\n";
+        menu += "\t2 - Retirer\n";
+        menu += "\t3 - Consulter votre solde\n";
+        menu += "\t4 - Quitter\n";
+        menu += "----------------------------------\n";
+        System.out.println(menu);
+    }
+
+    public int getHowMuch() {
+        String menu = "----------------------------------\n";
+        menu += "\tVeuillez entrer le montant de votre opération :\n";
+        menu += "----------------------------------\n";
+        System.out.println(menu);
+        return Read.rInt();
     }
 
     public static Props props(ActorSelection bankActor) {

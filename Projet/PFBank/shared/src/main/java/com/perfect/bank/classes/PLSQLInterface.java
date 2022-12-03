@@ -19,7 +19,7 @@ public class PLSQLInterface extends PLSQLSecret {
 
         int size = 0;
         if (rsExecuteQuery != null) {
-            rsExecuteQuery.last();
+            rsExecuteQuery.next();
             size = rsExecuteQuery.getRow();
         }
 
@@ -82,9 +82,12 @@ public class PLSQLInterface extends PLSQLSecret {
         boolean noAccount = true;
         double balance = 0.0;
 
+        System.out.println("" + clientUID);
+
         Statement stmtExecuteQuery = connexion.createStatement();
         ResultSet rsExecuteQuery = stmtExecuteQuery.executeQuery("select balance from client where id = " + clientUID);
-        while (rsExecuteQuery.next()) {
+
+        if (rsExecuteQuery.next()) {
             balance = rsExecuteQuery.getLong(1);
             noAccount = false;
         }
@@ -100,7 +103,7 @@ public class PLSQLInterface extends PLSQLSecret {
 
     private void setupDBConnection() throws SQLException, ClassNotFoundException {
         Class.forName("org.postgresql.Driver");
-        connexion = DriverManager.getConnection(URL, LOGIN, MDP);
+        connexion = DriverManager.getConnection(URL, LOGIN, PASSWORD);
     }
 
     public void closeDBConnection() throws Exception {

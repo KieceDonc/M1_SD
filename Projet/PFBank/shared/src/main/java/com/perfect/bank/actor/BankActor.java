@@ -6,6 +6,7 @@ import com.perfect.bank.messages.Messages.DeclareAsBanker;
 import com.perfect.bank.messages.Messages.Deposit;
 import com.perfect.bank.messages.Messages.GetBalance;
 import com.perfect.bank.messages.Messages.GetClientUID;
+import com.perfect.bank.messages.Messages.IsClientExist;
 import com.perfect.bank.messages.Messages.Withdraw;
 
 import akka.actor.AbstractActor;
@@ -22,24 +23,27 @@ public class BankActor extends AbstractActor {
     private ArrayList<ActorRef> bankers = new ArrayList<>();
     private int indexOfLastBanker = 0;
 
-    private int lastUID = 0;
-
     public BankActor() {
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
+                .match(IsClientExist.class, message -> isClientExist(message))
                 .match(GetClientUID.class, message -> getClientUID(getSender()))
                 .match(DeclareAsBanker.class, message -> registerBanker(getSender()))
-                .match(Deposit.class, message -> clientDeposit(getSender(), message))
-                .match(Withdraw.class, message -> clientWithdraw(getSender(), message))
-                .match(GetBalance.class, message -> clientGetBalance(getSender(), message))
+                .match(Deposit.class, message -> clientDeposit(message))
+                .match(Withdraw.class, message -> clientWithdraw(message))
+                .match(GetBalance.class, message -> clientGetBalance(message))
                 .build();
     }
 
-    public void getClientUID(ActorRef actor) {
-        Integer clientUID = this.generateUID();
+    private void isClientExist(IsClientExist isClientExist) {
+        this.getABanker().forward(isClientExist, getContext());
+    }
+
+    private void getClientUID(ActorRef actor) {
+        Integer clientUID = 0;
         actor.tell(clientUID, this.getSelf());
 
         this.log.info("New client, UID : " + clientUID);
@@ -55,27 +59,37 @@ public class BankActor extends AbstractActor {
     }
 
     public synchronized int generateUID() {
-        this.log.info("New UID given : " + this.lastUID);
-        return this.lastUID++;
+        return -1;
     }
 
-    public void clientDeposit(ActorRef actor, Deposit depositMsg) {
+    private void clientDeposit(Deposit depositMsg) {
         this.getABanker().forward(depositMsg, getContext());
     }
 
-    public void clientWithdraw(ActorRef actor, Withdraw withdrawMsg) {
+    private void clientWithdraw(Withdraw withdrawMsg) {
         this.getABanker().forward(withdrawMsg, getContext());
     }
 
-    public void clientGetBalance(ActorRef actor, GetBalance getBalanceMsg) {
+    private void clientGetBalance(GetBalance getBalanceMsg) {
         this.getABanker().forward(getBalanceMsg, getContext());
     }
 
-    public synchronized ActorRef getABanker() {
+    private synchronized ActorRef getABanker() {
         if (indexOfLastBanker >= bankers.size()) {
             indexOfLastBanker = 0;
         }
-        return bankers.get(indexOfLastBanker++);
+
+        ActorRef banker = null;
+        do {
+            banker = bankers.get(indexOfLastBanker++);
+
+            if (banker.isTerminated()) {
+                bankers.remove(indexOfLastBanker);
+                banker = null;
+            }
+        } while (banker == null);
+
+        return banker;
     }
 
     public static Props props() {

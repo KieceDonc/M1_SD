@@ -2,12 +2,23 @@ package com.perfect.bank.messages;
 
 import java.io.Serializable;
 
+import akka.actor.ActorRef;
+
 public class Messages {
 
     public interface Message extends Serializable {
+
+    }
+
+    public static class IsClientExist extends ClientInfo {
+
+        public IsClientExist(int clientUID) {
+            super(clientUID);
+        }
     }
 
     public static class GetClientUID implements Message {
+
         public GetClientUID() {
         }
     }
@@ -31,7 +42,7 @@ public class Messages {
         }
     }
 
-    private static class BankOperation extends ClientInfo implements Message {
+    private static class BankOperation extends ClientInfo {
 
         private double amount;
 
@@ -45,10 +56,23 @@ public class Messages {
         }
     }
 
-    public static class GetBalance extends ClientInfo implements Message {
+    public static class GetBalance extends ClientInfo {
 
         public GetBalance(int clientUID) {
             super(clientUID);
+        }
+    }
+
+    public static class GetBalanceResponse implements Message {
+
+        private double balance;
+
+        public GetBalanceResponse(double balance) {
+            this.balance = balance;
+        }
+
+        public double getBalance() {
+            return this.balance;
         }
     }
 
