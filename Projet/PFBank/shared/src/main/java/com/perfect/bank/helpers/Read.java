@@ -1,4 +1,4 @@
-package com.perfect.bank.classes;
+package com.perfect.bank.helpers;
 
 import java.io.*;
 
