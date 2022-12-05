@@ -1,4 +1,4 @@
-package com.perfect.bank.actor;
+package com.perfect.bank.actors;
 
 import akka.actor.AbstractActor;
 import akka.actor.ActorRef;
@@ -7,12 +7,13 @@ import akka.actor.Props;
 
 import java.sql.SQLException;
 
-import com.perfect.bank.classes.PLSQLInterface;
 import com.perfect.bank.exceptions.NoAccountException;
 import com.perfect.bank.exceptions.NotEnoughMoneyException;
+import com.perfect.bank.helpers.PLSQLInterface;
 import com.perfect.bank.messages.Messages;
 import com.perfect.bank.messages.Messages.Deposit;
 import com.perfect.bank.messages.Messages.GetBalance;
+import com.perfect.bank.messages.Messages.GetClientUID;
 import com.perfect.bank.messages.Messages.IsClientExist;
 import com.perfect.bank.messages.Messages.Withdraw;
 import com.perfect.bank.messages.Messages.Shutdown;
@@ -44,6 +45,7 @@ public class BankerActor extends AbstractActor {
   public Receive createReceive() {
     return receiveBuilder()
         .match(IsClientExist.class, message -> isClientExist(getSender(), message.getClientUID()))
+        .match(GetClientUID.class, message -> getClientUID(getSender()))
         .match(Deposit.class, message -> clientDeposit(getSender(), message))
         .match(Withdraw.class, message -> clientWithdraw(getSender(), message))
         .match(GetBalance.class, message -> clientGetBalance(getSender(), message))
@@ -65,6 +67,16 @@ public class BankerActor extends AbstractActor {
     }
 
     actor.tell(exist, getSelf());
+  }
+
+  public void getClientUID(ActorRef actor) {
+    int UID = -1;
+    try {
+      UID = this.plsqlInterface.createClient();
+    } catch (SQLException e) {
+      e.printStackTrace();
+    }
+    actor.tell(new Messages.SetClientUID(UID), getSelf());
   }
 
   public void clientDeposit(ActorRef actor, Deposit depositMsg) {
@@ -105,6 +117,7 @@ public class BankerActor extends AbstractActor {
   private void shutdown() {
     try {
       plsqlInterface.closeDBConnection();
+      bankActor.tell(new Messages.UnvalidateBanker(), getSelf());
     } catch (Exception e) {
       e.printStackTrace();
     }

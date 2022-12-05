@@ -1,4 +1,4 @@
-package com.perfect.bank.classes;
+package com.perfect.bank.helpers;
 
 import java.sql.*;
 
@@ -30,24 +30,27 @@ public class PLSQLInterface extends PLSQLSecret {
 
     public int createClient() throws SQLException {
         Statement stmtExecuteQuery = connexion.createStatement();
-        ResultSet rsExecuteQuery = stmtExecuteQuery.executeQuery(
-                "insert into client values (nextval('client_id_seq'),0);select currval('client_id_seq');");
+        ResultSet rsExecuteQuery = stmtExecuteQuery
+                .executeQuery("insert into client(id,balance) values (nextval('client_id_seq'),0) returning id");
 
         int clientUID = -1;
         if (rsExecuteQuery.next()) {
-            clientUID = rsExecuteQuery.getInt(0);
+            clientUID = rsExecuteQuery.getInt(1);
         }
 
         rsExecuteQuery.close();
         stmtExecuteQuery.close();
+
         return clientUID;
     }
 
     public void deposit(int clientUID, double amount) throws SQLException, NoAccountException {
         Statement stmtExecuteUpdate = connexion.createStatement();
+        String query = "update client set balance = (select balance+" + amount + " where id = " + clientUID
+                + ") where id = " + clientUID + ";";
+        System.out.println(query);
         int resultExecuteUpdate = stmtExecuteUpdate
-                .executeUpdate("update client set balance = (select balance+" + amount + " where id = " + clientUID
-                        + ") where id = " + clientUID + ";");
+                .executeUpdate(query);
         if (resultExecuteUpdate == 0) {
             throw new NoAccountException();
         }
@@ -82,13 +85,11 @@ public class PLSQLInterface extends PLSQLSecret {
         boolean noAccount = true;
         double balance = 0.0;
 
-        System.out.println("" + clientUID);
-
         Statement stmtExecuteQuery = connexion.createStatement();
         ResultSet rsExecuteQuery = stmtExecuteQuery.executeQuery("select balance from client where id = " + clientUID);
 
         if (rsExecuteQuery.next()) {
-            balance = rsExecuteQuery.getLong(1);
+            balance = rsExecuteQuery.getDouble(1);
             noAccount = false;
         }
         rsExecuteQuery.close();

@@ -1,20 +1,13 @@
-package com.perfect.bank.actor;
+package com.perfect.bank.actors;
 
 import akka.actor.ActorSelection;
 import akka.actor.AbstractActor;
-import akka.actor.ActorRef;
 import akka.actor.Props;
-import akka.pattern.Patterns;
-import java.time.Duration;
-import java.util.concurrent.CompletionStage;
-import java.util.concurrent.ExecutionException;
 
-import com.perfect.bank.classes.Read;
+import com.perfect.bank.helpers.Read;
 import com.perfect.bank.messages.Messages;
-import com.perfect.bank.messages.Messages.Deposit;
-import com.perfect.bank.messages.Messages.GetBalance;
 import com.perfect.bank.messages.Messages.GetBalanceResponse;
-import com.perfect.bank.messages.Messages.Withdraw;
+import com.perfect.bank.messages.Messages.SetClientUID;
 
 import akka.event.LoggingAdapter;
 import akka.event.Logging;
@@ -35,47 +28,37 @@ public class ClientActor extends AbstractActor {
 
     public ClientActor(ActorSelection bankActor) {
         this.bankActor = bankActor;
-        this.getUID();
-        this.loop();
+        bankActor.tell(new Messages.GetClientUID(), getSelf());
     }
 
     @Override
     public Receive createReceive() {
         return receiveBuilder()
-                .match(Deposit.class, message -> deposit(message.getAmount()))
-                .match(Withdraw.class, message -> withdraw(message.getAmount()))
+                .match(SetClientUID.class, message -> setUID(message.getClientUID()))
                 .match(GetBalanceResponse.class, message -> getBalanceResponse(message.getBalance()))
                 .build();
     }
 
+    private void setUID(int UID) {
+        this.UID = UID;
+        this.log.info("Client UID : " + this.UID);
+        this.loop();
+    }
+
     public int getUID() {
-        try {
-            if (this.UID < 0) {
-                CompletionStage<Object> result = Patterns.ask(bankActor,
-                        new Messages.GetClientUID(),
-                        Duration.ofSeconds(10));
-
-                this.UID = (int) result.toCompletableFuture().get();
-
-                System.out.println("UID reçu : " + this.UID);
-            }
-        } catch (InterruptedException | ExecutionException e) {
-            e.printStackTrace();
-        }
-
         return this.UID;
     }
 
     public void deposit(double amount) {
-        bankActor.tell(new Messages.Deposit(this.UID, amount), getSelf());
+        bankActor.tell(new Messages.Deposit(this.getUID(), amount), getSelf());
     }
 
     public void withdraw(double amount) {
-        bankActor.tell(new Messages.Withdraw(this.UID, amount), getSelf());
+        bankActor.tell(new Messages.Withdraw(this.getUID(), amount), getSelf());
     }
 
     public void getBalance() {
-        this.bankActor.tell(new Messages.GetBalance(this.UID), this.getSelf());
+        this.bankActor.tell(new Messages.GetBalance(this.getUID()), this.getSelf());
     }
 
     public void getBalanceResponse(double balance) {
@@ -120,12 +103,12 @@ public class ClientActor extends AbstractActor {
         System.out.println(menu);
     }
 
-    public int getHowMuch() {
+    public double getHowMuch() {
         String menu = "----------------------------------\n";
         menu += "\tVeuillez entrer le montant de votre opération :\n";
         menu += "----------------------------------\n";
         System.out.println(menu);
-        return Read.rInt();
+        return Read.rDouble();
     }
 
     public static Props props(ActorSelection bankActor) {
