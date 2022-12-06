@@ -2,8 +2,6 @@ package com.perfect.bank.messages;
 
 import java.io.Serializable;
 
-import akka.actor.ActorRef;
-
 public class Messages {
 
     public interface Message extends Serializable {
@@ -17,9 +15,9 @@ public class Messages {
         }
     }
 
-    public static class GetClientUID implements Message {
+    public static class CreateClientUID implements Message {
 
-        public GetClientUID() {
+        public CreateClientUID() {
         }
     }
 
