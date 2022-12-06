@@ -48,7 +48,6 @@ public class SGBDInterface extends SGBDSecret {
         Statement stmtExecuteUpdate = connexion.createStatement();
         String query = "update client set balance = (select balance+" + amount + " where id = " + clientUID
                 + ") where id = " + clientUID + ";";
-        System.out.println(query);
         int resultExecuteUpdate = stmtExecuteUpdate
                 .executeUpdate(query);
         if (resultExecuteUpdate == 0) {

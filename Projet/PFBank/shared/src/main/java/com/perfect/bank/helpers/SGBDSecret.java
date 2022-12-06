@@ -2,6 +2,7 @@ package com.perfect.bank.helpers;
 
 public class SGBDSecret {
 
+    // You can try, SGBD has been deleted since them
     public static final String LOGIN = "admin";
 
     public static final String PASSWORD = "com.perfect.bank.password";
