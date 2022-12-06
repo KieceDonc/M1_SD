@@ -11,7 +11,17 @@ import com.typesafe.config.ConfigFactory;
 
 public class App {
     public static void main(String[] args) {
-        generateBankers(5);
+        // generateBankers(5);
+        ActorSystem actorSystem = ActorSystem.create("Banker", ConfigFactory.load("banker.conf"));
+        ActorSelection bankActor = actorSystem.actorSelection("akka://myActorSystem@127.0.0.1:8000/user/bankActor");
+        ActorRef bankerActor = actorSystem.actorOf(BankerActor.props(bankActor), "bankerActor");
+
+        // En attente de Ctrl-C
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            bankerActor.tell(new Messages.Shutdown(), ActorRef.noSender());
+            actorSystem.terminate();
+            System.out.println("System terminated.");
+        }));
     }
 
     public static void generateBankers(int number) {

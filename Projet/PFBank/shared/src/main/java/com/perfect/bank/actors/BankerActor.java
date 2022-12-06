@@ -9,7 +9,7 @@ import java.sql.SQLException;
 
 import com.perfect.bank.exceptions.NoAccountException;
 import com.perfect.bank.exceptions.NotEnoughMoneyException;
-import com.perfect.bank.helpers.PLSQLInterface;
+import com.perfect.bank.helpers.SGBDInterface;
 import com.perfect.bank.messages.Messages;
 import com.perfect.bank.messages.Messages.Deposit;
 import com.perfect.bank.messages.Messages.GetBalance;
@@ -27,14 +27,14 @@ public class BankerActor extends AbstractActor {
 
   private ActorSelection bankActor;
 
-  private PLSQLInterface plsqlInterface;
+  private SGBDInterface sgbdInterface;
 
   public BankerActor(ActorSelection bankActor) {
     this.bankActor = bankActor;
     this.declareToBank();
 
     try {
-      plsqlInterface = new PLSQLInterface();
+      sgbdInterface = new SGBDInterface();
     } catch (Exception e) {
       e.printStackTrace();
     }
@@ -61,7 +61,7 @@ public class BankerActor extends AbstractActor {
     boolean exist = false;
 
     try {
-      exist = this.plsqlInterface.isClientInDB(clientUID);
+      exist = this.sgbdInterface.isClientInDB(clientUID);
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -72,7 +72,7 @@ public class BankerActor extends AbstractActor {
   public void getClientUID(ActorRef actor) {
     int UID = -1;
     try {
-      UID = this.plsqlInterface.createClient();
+      UID = this.sgbdInterface.createClient();
     } catch (SQLException e) {
       e.printStackTrace();
     }
@@ -81,7 +81,7 @@ public class BankerActor extends AbstractActor {
 
   public void clientDeposit(ActorRef actor, Deposit depositMsg) {
     try {
-      this.plsqlInterface.deposit(depositMsg.getClientUID(), depositMsg.getAmount());
+      this.sgbdInterface.deposit(depositMsg.getClientUID(), depositMsg.getAmount());
     } catch (SQLException e) {
       e.printStackTrace();
     } catch (NoAccountException e) {
@@ -91,7 +91,7 @@ public class BankerActor extends AbstractActor {
 
   public void clientWithdraw(ActorRef actor, Withdraw withdrawMsg) {
     try {
-      this.plsqlInterface.withdraw(withdrawMsg.getClientUID(), withdrawMsg.getAmount());
+      this.sgbdInterface.withdraw(withdrawMsg.getClientUID(), withdrawMsg.getAmount());
     } catch (SQLException e) {
       e.printStackTrace();
     } catch (NoAccountException e) {
@@ -103,7 +103,7 @@ public class BankerActor extends AbstractActor {
 
   public void clientGetBalance(ActorRef actor, GetBalance getBalanceMsg) {
     try {
-      double balance = this.plsqlInterface.getBalance(getBalanceMsg.getClientUID());
+      double balance = this.sgbdInterface.getBalance(getBalanceMsg.getClientUID());
       actor.tell(new Messages.GetBalanceResponse(balance), getSelf());
     } catch (SQLException e) {
       e.printStackTrace();
@@ -116,7 +116,7 @@ public class BankerActor extends AbstractActor {
 
   private void shutdown() {
     try {
-      plsqlInterface.closeDBConnection();
+      sgbdInterface.closeDBConnection();
       bankActor.tell(new Messages.UnvalidateBanker(), getSelf());
     } catch (Exception e) {
       e.printStackTrace();

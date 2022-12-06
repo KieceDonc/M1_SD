@@ -5,11 +5,11 @@ import java.sql.*;
 import com.perfect.bank.exceptions.NoAccountException;
 import com.perfect.bank.exceptions.NotEnoughMoneyException;
 
-public class PLSQLInterface extends PLSQLSecret {
+public class SGBDInterface extends SGBDSecret {
 
     Connection connexion;
 
-    public PLSQLInterface() throws Exception {
+    public SGBDInterface() throws Exception {
         setupDBConnection();
     }
 
