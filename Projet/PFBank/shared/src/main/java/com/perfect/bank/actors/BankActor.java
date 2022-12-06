@@ -2,10 +2,10 @@ package com.perfect.bank.actors;
 
 import java.util.ArrayList;
 
+import com.perfect.bank.messages.Messages.CreateClientUID;
 import com.perfect.bank.messages.Messages.DeclareAsBanker;
 import com.perfect.bank.messages.Messages.Deposit;
 import com.perfect.bank.messages.Messages.GetBalance;
-import com.perfect.bank.messages.Messages.GetClientUID;
 import com.perfect.bank.messages.Messages.IsClientExist;
 import com.perfect.bank.messages.Messages.UnvalidateBanker;
 import com.perfect.bank.messages.Messages.Withdraw;
@@ -31,7 +31,7 @@ public class BankActor extends AbstractActor {
     public Receive createReceive() {
         return receiveBuilder()
                 .match(IsClientExist.class, message -> isClientExist(message))
-                .match(GetClientUID.class, message -> getClientUID(message))
+                .match(CreateClientUID.class, message -> createClientUID(message))
                 .match(DeclareAsBanker.class, message -> registerBanker(getSender()))
                 .match(Deposit.class, message -> clientDeposit(message))
                 .match(Withdraw.class, message -> clientWithdraw(message))
@@ -44,7 +44,7 @@ public class BankActor extends AbstractActor {
         this.getABanker().forward(isClientExist, getContext());
     }
 
-    private void getClientUID(GetClientUID getClientUIDMessage) {
+    private void createClientUID(CreateClientUID getClientUIDMessage) {
         this.getABanker().forward(getClientUIDMessage, getContext());
     }
 
