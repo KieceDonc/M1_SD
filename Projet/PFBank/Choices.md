@@ -2,3 +2,5 @@ Décision de partir sur "on attribut une tâche un banquier" au lieu de "un clie
 
 l'interface de connexion sgbd renvoit des erreurs
 c'est au banqier de gérer les erreurs et faire un retour au client
+
+parlé de l'implémentation de msg

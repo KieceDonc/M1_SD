@@ -12,8 +12,7 @@ public class ConfigOverride {
     properties.setProperty("akka.remote.artery.canonical.hostname", newIp);
     properties.setProperty("akka.remote.artery.canonical.port", newPort);
     Config overrides = ConfigFactory.parseProperties(properties);
-    Config overrided = overrides.withFallback(ConfigFactory.load());
-
+    Config overrided = overrides.withFallback(config);
     return overrided;
   }
 }

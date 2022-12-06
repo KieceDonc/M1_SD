@@ -13,7 +13,7 @@ import com.perfect.bank.helpers.SGBDInterface;
 import com.perfect.bank.messages.Messages;
 import com.perfect.bank.messages.Messages.Deposit;
 import com.perfect.bank.messages.Messages.GetBalance;
-import com.perfect.bank.messages.Messages.GetClientUID;
+import com.perfect.bank.messages.Messages.CreateClientUID;
 import com.perfect.bank.messages.Messages.IsClientExist;
 import com.perfect.bank.messages.Messages.Withdraw;
 import com.perfect.bank.messages.Messages.Shutdown;
@@ -45,7 +45,7 @@ public class BankerActor extends AbstractActor {
   public Receive createReceive() {
     return receiveBuilder()
         .match(IsClientExist.class, message -> isClientExist(getSender(), message.getClientUID()))
-        .match(GetClientUID.class, message -> getClientUID(getSender()))
+        .match(CreateClientUID.class, message -> createClientUID(getSender()))
         .match(Deposit.class, message -> clientDeposit(getSender(), message))
         .match(Withdraw.class, message -> clientWithdraw(getSender(), message))
         .match(GetBalance.class, message -> clientGetBalance(getSender(), message))
@@ -53,7 +53,7 @@ public class BankerActor extends AbstractActor {
         .build();
   }
 
-  public void declareToBank() {
+  private void declareToBank() {
     bankActor.tell(new Messages.DeclareAsBanker(), getSelf());
   }
 
@@ -66,17 +66,17 @@ public class BankerActor extends AbstractActor {
       e.printStackTrace();
     }
 
-    actor.tell(exist, getSelf());
+    actor.tell(exist, this.getSelf());
   }
 
-  public void getClientUID(ActorRef actor) {
+  public void createClientUID(ActorRef actor) {
     int UID = -1;
     try {
       UID = this.sgbdInterface.createClient();
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    actor.tell(new Messages.SetClientUID(UID), getSelf());
+    actor.tell(new Messages.SetClientUID(UID), this.getSelf());
   }
 
   public void clientDeposit(ActorRef actor, Deposit depositMsg) {
@@ -104,20 +104,20 @@ public class BankerActor extends AbstractActor {
   public void clientGetBalance(ActorRef actor, GetBalance getBalanceMsg) {
     try {
       double balance = this.sgbdInterface.getBalance(getBalanceMsg.getClientUID());
-      actor.tell(new Messages.GetBalanceResponse(balance), getSelf());
+      actor.tell(new Messages.GetBalanceResponse(balance), this.getSelf());
     } catch (SQLException e) {
       e.printStackTrace();
-      actor.tell(-1, getSelf());
+      actor.tell(-1, this.getSelf());
     } catch (NoAccountException e) {
       e.printStackTrace();
-      actor.tell(-1, getSelf());
+      actor.tell(-1, this.getSelf());
     }
   }
 
   private void shutdown() {
     try {
       sgbdInterface.closeDBConnection();
-      bankActor.tell(new Messages.UnvalidateBanker(), getSelf());
+      bankActor.tell(new Messages.UnvalidateBanker(), this.getSelf());
     } catch (Exception e) {
       e.printStackTrace();
     }
