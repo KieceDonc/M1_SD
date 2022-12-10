@@ -21,13 +21,6 @@ public class Messages {
         }
     }
 
-    public static class SetClientUID extends ClientInfo {
-
-        public SetClientUID(int clientUID) {
-            super(clientUID);
-        }
-    }
-
     public static class DeclareAsBanker implements Message {
         public DeclareAsBanker() {
         }

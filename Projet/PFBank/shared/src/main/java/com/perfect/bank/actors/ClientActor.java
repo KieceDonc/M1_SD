@@ -9,7 +9,6 @@ import com.perfect.bank.messages.Messages;
 import com.perfect.bank.messages.Messages.Deposit;
 import com.perfect.bank.messages.Messages.GetBalance;
 import com.perfect.bank.messages.Messages.GetBalanceResponse;
-import com.perfect.bank.messages.Messages.SetClientUID;
 import com.perfect.bank.messages.Messages.Withdraw;
 
 import akka.event.LoggingAdapter;
@@ -40,13 +39,8 @@ public class ClientActor extends AbstractActor {
                 .match(Deposit.class, message -> deposit(message.getAmount()))
                 .match(Withdraw.class, message -> withdraw(message.getAmount()))
                 .match(GetBalance.class, message -> getBalance(getSender()))
-                .match(SetClientUID.class, message -> setUID(message.getClientUID()))
                 .match(GetBalanceResponse.class, message -> getBalanceResponse(message.getBalance()))
                 .build();
-    }
-
-    private void setUID(int UID) {
-        this.UID = UID;
     }
 
     public int getUID() {
@@ -72,10 +66,6 @@ public class ClientActor extends AbstractActor {
 
     public void getBalanceResponse(double balance) {
         respondTo.tell(balance, this.getSelf());
-    }
-
-    public static Props props(ActorSelection bankActor) {
-        return Props.create(ClientActor.class, bankActor);
     }
 
     public static Props props(ActorSelection bankActor, int clientUID) {

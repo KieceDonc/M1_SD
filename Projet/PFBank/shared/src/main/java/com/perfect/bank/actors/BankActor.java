@@ -73,7 +73,7 @@ public class BankActor extends AbstractActor {
         this.getABanker().forward(getBalanceMsg, getContext());
     }
 
-    private synchronized ActorRef getABanker() {
+    private ActorRef getABanker() {
         if (indexOfLastBanker >= bankers.size()) {
             indexOfLastBanker = 0;
         }

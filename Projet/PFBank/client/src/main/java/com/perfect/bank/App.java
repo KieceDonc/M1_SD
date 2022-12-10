@@ -6,12 +6,15 @@ import akka.actor.ActorSystem;
 import akka.pattern.Patterns;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import com.perfect.bank.actors.ClientActor;
 import com.perfect.bank.helpers.ConfigOverride;
@@ -20,7 +23,11 @@ import com.perfect.bank.messages.Messages;
 import com.typesafe.config.ConfigFactory;
 
 public class App {
+    private static int numberOfOperations = 0;
+    private static double timeTakenInTotal = 0;
+
     public static void main(String[] args) {
+
         String menu = "----------------------------------\n";
         menu += "\t1 - Contrôle manuel sur 1 client\n";
         menu += "\t2 - Lance plusieurs clients\n";
@@ -91,6 +98,22 @@ public class App {
         }
 
         return UIDExist;
+    }
+
+    private static int createUID(ActorSelection bankActor) {
+        int UID = -1;
+        CompletionStage<Object> result = Patterns.ask(bankActor,
+                new Messages.CreateClientUID(),
+                Duration.ofSeconds(10));
+
+        try {
+            UID = (int) result.toCompletableFuture().get();
+        } catch (InterruptedException | ExecutionException e) {
+            e.printStackTrace();
+            System.exit(0);
+        }
+
+        return UID;
     }
 
     public static void showBankMenu(ActorRef client) {
@@ -177,7 +200,7 @@ public class App {
                 break;
             }
             case 2: {
-                client = actorSystem.actorOf(ClientActor.props(bankActor), "clientActor");
+                client = actorSystem.actorOf(ClientActor.props(bankActor, createUID(bankActor)), "clientActor");
                 break;
             }
             default: {
@@ -195,11 +218,21 @@ public class App {
     }
 
     private static void generateClients(int number) {
+
+        // En attente de Ctrl-C
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            System.out
+                    .println("System terminated. Number of operations :" + numberOfOperations
+                            + ". Avg time for an operation in ms : "
+                            + timeTakenInTotal / numberOfOperations);
+        }));
+
         if (number > 1899750000) {
             System.out.println("Le système n'est pas conçu pour autant de client");
             System.exit(0);
         }
 
+        ArrayList<Runnable> runnables = new ArrayList<>();
         // port [10 000;60 000]
         // ip [127.51.X.X; 127.200.X.X]
         // total of possible clients 50 000 * 255 * 149 = 1 899 750 000
@@ -212,7 +245,7 @@ public class App {
             final String ip = "127." + _2Byte + "." + _3Byte + "." + _4Byte;
 
             final int UID = index;
-            new Thread(new Runnable() {
+            Runnable runnable = new Runnable() {
                 @Override
                 public void run() {
                     String name = "Client" + UID;
@@ -225,15 +258,18 @@ public class App {
                     if (isUIDExist(bankActor, UID)) {
                         client = actorSystem.actorOf(ClientActor.props(bankActor, UID));
                     } else {
-                        client = actorSystem.actorOf(ClientActor.props(bankActor));
+                        client = actorSystem.actorOf(ClientActor.props(bankActor, createUID(bankActor)));
                     }
 
+                    int interval = (int) (3000 + (10000 - 3000) * Math.random());
                     Timer timer = new Timer();
                     timer.schedule(new TimerTask() {
                         double amount = 10 + (10000 - 10) * new Random().nextDouble();
 
                         @Override
                         public void run() {
+                            addOneOperation();
+                            double begin = System.currentTimeMillis();
                             switch ((int) (Math.random() * 2)) {
                                 case 0: {
                                     client.tell(new Messages.Deposit(-1, amount), ActorRef.noSender());
@@ -246,18 +282,43 @@ public class App {
                                     break;
                                 }
                             }
+                            addTimeOfOneOperation(begin, System.currentTimeMillis());
                         }
-                    }, new Date(), 3000);
-
-                    // En attente de Ctrl-C
-                    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-                        actorSystem.terminate();
-                        timer.cancel();
-                        System.out.println("System terminated.");
-                    }));
+                    }, new Date(), interval);
                 }
-            }).start();
+            };
+            runnables.add(runnable);
         }
 
+        int numberOfThreads = 0;
+        if (number < 500) {
+            numberOfThreads = number;
+        } else {
+            numberOfThreads = 500;
+        }
+
+        ExecutorService executor = Executors.newFixedThreadPool(numberOfThreads);
+
+        for (int index = 0; index < runnables.size(); index++) {
+            executor.execute(runnables.get(index));
+
+            try {
+                Thread.sleep(25);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
+        }
+
+        executor.shutdown();
+
+    }
+
+    private static synchronized void addOneOperation() {
+        numberOfOperations += 1;
+    }
+
+    private static synchronized void addTimeOfOneOperation(double begin, double end) {
+        timeTakenInTotal += end - begin;
     }
 }

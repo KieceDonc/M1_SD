@@ -76,7 +76,7 @@ public class BankerActor extends AbstractActor {
     } catch (SQLException e) {
       e.printStackTrace();
     }
-    actor.tell(new Messages.SetClientUID(UID), this.getSelf());
+    actor.tell(UID, this.getSelf());
   }
 
   public void clientDeposit(ActorRef actor, Deposit depositMsg) {
